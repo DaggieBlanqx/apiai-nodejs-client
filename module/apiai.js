@@ -18,6 +18,7 @@ var ContextsRequest = require('./contexts_request').ContextsRequest;
 var GetContextsRequest = require('./get_contexts_request').GetContextsRequest;
 var DeleteContextsRequest = require('./delete_contexts_request').DeleteContextsRequest;
 var TextRequest = require('./text_request').TextRequest;
+var IntentRequest = require('./intent_request').IntentRequest;
 var EventRequest = require('./event_request').EventRequest;
 var VoiceRequest = require('./voice_request').VoiceRequest;
 var UserEntitiesRequest = require('./user_entities_request').UserEntitiesRequest;
@@ -45,35 +46,43 @@ exports = module.exports = createApplication;
 /**
  * Old version function for creation application instance.
  * @param  {string} clientAccessToken Access token. You can get it on https://api.ai
+ * @param  {string} developerAccessToken Access token. You can get it on https://api.ai
  * @param  {string} subscriptionKey   Subscribtion key. It has not been used anymore.
  * @param  {object} _options          Default option for apllication.
  * @return {Application}              [description]
  */
-function createApplicationDeprecated(clientAccessToken, subscriptionKey, _options) {
+function createApplicationDeprecated(clientAccessToken, developerAccessToken, subscriptionKey, _options) {
     var options = _options || {};
 
     if (!clientAccessToken) {
         throw new Error('\'clientAccessToken\' cannot be empty.');
     }
+    if (!developerAccessToken) {
+        throw new Error('\'clientAccessToken\' cannot be empty.');
+    }
 
-    return new Application(clientAccessToken, options);
+    return new Application(clientAccessToken, developerAccessToken, options);
 }
 
 /**
  * New version function for creation application instance.
  * @param  {string} clientAccessToken Access token. You can get it on https://api.ai
+ * @param  {string} developerAccessToken Access token. You can get it on https://api.ai
  * @param  {string} subscriptionKey   Subscribtion key. It has not been used anymore.
  * @param  {object} _options          Default option for apllication.
  * @return {Application}              [description]
  */
-function createApplicationNew(clientAccessToken, _options) {
+function createApplicationNew(clientAccessToken, developerAccessToken, _options) {
     var options = _options || {};
 
     if (!clientAccessToken) {
         throw new Error('\'clientAccessToken\' cannot be empty.');
     }
+    if (!developerAccessToken) {
+        throw new Error('\'clientAccessToken\' cannot be empty.');
+    }
 
-    return new Application(clientAccessToken, options);
+    return new Application(clientAccessToken, developerAccessToken, options);
 }
 
 /**
@@ -84,7 +93,7 @@ function createApplicationNew(clientAccessToken, _options) {
  * @api public
  */
 function createApplication() {
-    if (arguments.length > 1) {
+    if (arguments.length > 2) {
         if (typeof arguments[1] == "string") {
             return createApplicationDeprecated.apply(this, arguments);
         } else if (typeof arguments[1] == "object") {
@@ -97,12 +106,13 @@ function createApplication() {
     }
 }
 
-function Application (clientAccessToken, options) {
+function Application (clientAccessToken, developerAccessToken, options) {
     var self = this;
 
     self.language = options.language || language;
 
     self.clientAccessToken = clientAccessToken;
+    self.developerAccessToken = developerAccessToken;
 
     self.hostname = options.hostname || hostname;
     self.version = options.version || version;
@@ -189,6 +199,41 @@ Application.prototype.textRequest = function(query, options) {
     return new TextRequest(self, query, opt);
 };
 
+Application.prototype.intentGetRequest = function(options, intent) {
+    var self = this;
+    var opt = options || {};
+
+    if (!('endpoint' in opt)) {
+        opt.endpoint = self.endpoint;
+    }
+
+    if (!('version' in opt)) {
+        opt.version = self.version;
+    }
+
+    opt.method = 'GET';
+    opt.path = 'intents';
+
+    return new IntentRequest(self, opt, intent);
+};
+
+Application.prototype.intentPostRequest = function(options, intent) {
+    var self = this;
+    var opt = options || {};
+
+    if (!('endpoint' in opt)) {
+        opt.endpoint = self.endpoint;
+    }
+
+    if (!('version' in opt)) {
+        opt.version = self.version;
+    }
+
+    opt.method = 'POST';
+    opt.path = 'intents';
+
+    return new IntentRequest(self, opt, intent);
+};
 Application.prototype.eventRequest = function(event, options) {
     var self = this;
     var opt = options || {};
